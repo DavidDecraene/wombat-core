@@ -55,6 +55,11 @@ namespace Wombat
             OnFiniteStateEntry?.Invoke(state.state);
         }
 
+        public void Reset()
+        {
+            SetState(defaultState.state);
+        }
+
         public void SetState(Data state)
         {
             if (state == null) return;

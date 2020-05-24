@@ -12,6 +12,7 @@ namespace Wombat
         private System.Random rd;
         private float randomInterval = 0;
         private float[] randomBounds = { 0, 0 };
+        private bool startImmediate = false;
 
         public DeltaWatch(float interval)
         {
@@ -21,6 +22,12 @@ namespace Wombat
         public DeltaWatch Interval(float interval)
         {
             this.interval = interval;
+            return this;
+        }
+
+        public DeltaWatch Immediate()
+        {
+            this.startImmediate = true;
             return this;
         }
 
@@ -54,7 +61,11 @@ namespace Wombat
 
         public bool Ping(float delta)
         {
-            started = true;
+            if (started == false)
+            {
+                started = true;
+                if (startImmediate) return true;
+            }
             timepassed += delta;
             if (timepassed >= (interval + randomInterval))
             {

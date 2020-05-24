@@ -20,6 +20,12 @@ namespace Wombat
 
         }
 
+        public void Reset()
+        {
+            lastCheck = Time.realtimeSinceStartup;
+
+        }
+
         public bool Ping()
         {
             float delta = Time.realtimeSinceStartup - lastCheck;
