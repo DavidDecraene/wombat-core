@@ -27,6 +27,13 @@ namespace Wombat
             }
         }
 
+        public bool Toggle(bool state)
+        {
+            if (this.gameObject.activeSelf == state) return false;
+            this.gameObject.SetActive(state);
+            return true;
+        }
+
 
         public Ray ToRay(Camera bounds)
         {
