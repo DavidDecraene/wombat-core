@@ -13,6 +13,10 @@ namespace Wombat
         private float randomInterval = 0;
         private float[] randomBounds = { 0, 0 };
         private bool startImmediate = false;
+        public bool Enabled { get; set; } = true;
+        public float  Timepassed { get => timepassed; }
+        public float TotalTime { get => interval + randomInterval; }
+        public float TimeLeft { get => TotalTime - Timepassed; }
 
         public DeltaWatch(float interval)
         {
@@ -49,7 +53,7 @@ namespace Wombat
             return this.timepassed > 0;
         }
 
-        public void Reset()
+        public void Reset(bool resetStart)
         {
             this.timepassed = 0;
 
@@ -57,6 +61,17 @@ namespace Wombat
             {
                 randomInterval = rd.NextFloatRange(randomBounds[0], randomBounds[1]);
             }
+            if (resetStart) started = false;
+        }
+
+        public void Reset()
+        {
+            Reset(false);
+        }
+
+        public float Fraction()
+        {
+            return timepassed / TotalTime;
         }
 
         public bool Ping(float delta)
@@ -67,7 +82,7 @@ namespace Wombat
                 if (startImmediate) return true;
             }
             timepassed += delta;
-            if (timepassed >= (interval + randomInterval))
+            if (timepassed >= TotalTime)
             {
                 Reset();
                 return true;

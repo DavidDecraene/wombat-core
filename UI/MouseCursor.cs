@@ -23,7 +23,7 @@ namespace Wombat
         {
             if (!locked)
             {
-                RectTransform.position = new Vector3(Input.mousePosition.x, Input.mousePosition.y, RectTransform.position.z);
+                RectTransform.position = new Vector3(Input.mousePosition.x, Input.mousePosition.y, RectTransform.position.z) - offset;
             }
         }
 

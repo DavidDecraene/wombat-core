@@ -12,12 +12,15 @@ namespace Wombat
 
         public Type Resource { get; private set; }
         public int Count { get; private set;  }
-        private readonly Inventory<Type> parent;
+        public Inventory<Type> Parent { get; private set; }
         private bool lockResource = false;
+        public int StackMaximum { get; set; } = -1;
+
+        public Predicate<Type> filter;
 
         public InventorySlot(Inventory<Type> parent)
         {
-            this.parent = parent;
+            this.Parent = parent;
         }
 
         public void LockResource(Type resource)
@@ -64,6 +67,7 @@ namespace Wombat
         public int RemoveResource(Type resource, int amount)
         {
             if (amount <= 0) return 0;
+            if (resource == null) return 0;
             if (this.Resource == null) return 0;
             
             if (!this.Resource.Equals(resource)) { return 0; }
@@ -71,7 +75,7 @@ namespace Wombat
             if (room <= 0) return 0;
             if (amount > room) amount = room;
             SetCount(Mathf.Max(Count - amount, 0));
-            parent.Contents.BalanceCount(this.Resource, -amount);
+            Parent.Contents.BalanceCount(this.Resource, -amount);
             if (Count <= 0 && !lockResource)
             {
                 this.Resource = default;
@@ -80,36 +84,69 @@ namespace Wombat
             return amount;
         }
 
+        public int GetStackSize(Type resource, bool checkLocalLimits = true)
+        {
+            int size = Parent.GetStackSize(resource);
+            if (checkLocalLimits && StackMaximum > 0 && StackMaximum < size) size = StackMaximum;
+            return size;
+        }
+
         public int AcceptResource(Type resource, int amount)
         {
             if (amount <= 0) return 0;
-            if (this.Resource == null) return this.parent.GetStackSize(resource);
+            if (resource == null) return 0;
+            if (filter != null && !filter(resource)) return 0;
+            if (this.Resource == null) return Mathf.Min(amount, GetStackSize(resource));
             if (!this.Resource.Equals(resource)) { return 0; }
 
-            int room = this.parent.GetStackSize(resource) - Count;
+            int room = GetStackSize(resource) - Count;
             if (room <= 0) return 0;
-            if (amount > room) amount = room;
-            return amount;
+            return Mathf.Min(amount, room);
         }
 
-        public int AddResource(Type resource, int amount)
+        public int RestoreResource(Type resource, int amount)
         {
             if (amount <= 0) return 0;
-            if (this.Resource != null)
+            if (resource == null) return 0;
+            if (filter != null && !filter(resource)) return 0;
+            if (Resource != null)
             {
-                if (!this.Resource.Equals(resource)) { return 0; }
+                if (!Resource.Equals(resource)) { return 0; }
             }
             else
             {
                 this.Resource = resource;
                 this.OnSlotEvent?.Invoke(this);
             }
-            int room = this.parent.GetStackSize(resource) - Count;
+            int room = GetStackSize(resource, false) - Count;
             if (room <= 0) return 0;
             if (amount > room) amount = room;
             SetCount(Count + amount);
-            parent.Contents.BalanceCount(this.Resource, amount);
+            Parent.Contents.BalanceCount(Resource, amount);
             return amount;
         }
+
+        public int AddResource(Type resource, int amount)
+        {
+            if (amount <= 0) return 0;
+            if (resource == null) return 0;
+            if (filter != null && !filter(resource)) return 0;
+            if (Resource != null)
+            {
+                if (!Resource.Equals(resource)) { return 0; }
+            }
+            else
+            {
+                this.Resource = resource;
+                this.OnSlotEvent?.Invoke(this);
+            }
+            int room = GetStackSize(resource) - Count;
+            if (room <= 0) return 0;
+            if (amount > room) amount = room;
+            SetCount(Count + amount);
+            Parent.Contents.BalanceCount(Resource, amount);
+            return amount;
+        }
+
     }
 }

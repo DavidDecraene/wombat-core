@@ -1,11 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+
 namespace Wombat
 {
     [System.Serializable]
-    public class InventorySaveData
+    public class PlaceHolderIcon
     {
-        public InventorySlotSaveData[] slots;
+        public Sprite icon;
+        public Color color = Color.white;
     }
 }

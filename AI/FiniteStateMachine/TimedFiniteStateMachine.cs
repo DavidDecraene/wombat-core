@@ -1,16 +1,13 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 namespace Wombat
 {
-    public delegate void OnFiniteStateEntry<Data>(Data status) where Data : System.Enum;
-    public delegate void OnFiniteStateExit<Data>(Data status) where Data : System.Enum;
-
-    public class FiniteStateMachine<Data> where Data : System.Enum
+    public class TimedFiniteStateMachine<Data> where Data : System.Enum
     {
-        private readonly Dictionary<Data, FiniteState<Data>> dictionary = new Dictionary<Data, FiniteState<Data>>();
-        private FiniteState<Data> currentState;
-        private FiniteState<Data> defaultState;
+        private readonly Dictionary<Data, TimedFiniteState<Data>> dictionary = new Dictionary<Data, TimedFiniteState<Data>>();
+        private TimedFiniteState<Data> currentState;
+        private TimedFiniteState<Data> defaultState;
         public event OnFiniteStateEntry<Data> OnFiniteStateEntry;
         public event OnFiniteStateExit<Data> OnFiniteStateExit;
         private bool started = false;
@@ -18,11 +15,11 @@ namespace Wombat
 
         public Data State { get => currentState != null ? currentState.state : default; }
 
-        public FiniteStateMachine()
+        public TimedFiniteStateMachine()
         {
         }
 
-        public FiniteStateMachine<Data> AddDefaultState(FiniteState<Data> state)
+        public TimedFiniteStateMachine<Data> AddDefaultState(TimedFiniteState<Data> state)
         {
             this.defaultState = state;
             this.currentState = state;
@@ -30,18 +27,18 @@ namespace Wombat
             return this;
         }
 
-        public FiniteStateMachine<Data> AddState(FiniteState<Data> state)
+        public TimedFiniteStateMachine<Data> AddState(TimedFiniteState<Data> state)
         {
             dictionary.Add(state.state, state);
             return this;
         }
 
-        public FiniteState<Data> GetState()
+        public TimedFiniteState<Data> GetState()
         {
             return this.currentState;
         }
 
-        private void ChangeCurrentState(FiniteState<Data> state)
+        private void ChangeCurrentState(TimedFiniteState<Data> state)
         {
             // Debug.Log("Changing states to " + state);
             if (!state.AcceptEnter())
@@ -67,7 +64,7 @@ namespace Wombat
         public void ResetState(Data state)
         {
             if (state == null) return;
-            if (dictionary.TryGetValue(state, out FiniteState<Data> result))
+            if (dictionary.TryGetValue(state, out TimedFiniteState<Data> result))
             {
                 ChangeCurrentState(result);
             }
@@ -82,7 +79,7 @@ namespace Wombat
         {
             if (state == null) return;
             if (currentState != null && currentState.state.Equals(state)) return;
-            if (dictionary.TryGetValue(state, out FiniteState<Data> result))
+            if (dictionary.TryGetValue(state, out TimedFiniteState<Data> result))
             {
                 ChangeCurrentState(result);
             }
@@ -98,19 +95,11 @@ namespace Wombat
             if (currentState != null) this.currentState.Enter();
         }
 
-        public void Update()
+        public void Update(float delta)
         {
             if (!enabled) return;
             if (!started) Start();
-            if (currentState != null) SetState(currentState.Update());
-        }
-
-        public void FixedUpdate()
-        {
-            if (!enabled) return;
-            if (!started) Start();
-            if (currentState != null) SetState(currentState.FixedUpdate());
-
+            if (currentState != null) SetState(currentState.Update(delta));
         }
     }
 }

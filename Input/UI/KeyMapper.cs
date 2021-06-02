@@ -2,22 +2,26 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
+using System;
 
 namespace Wombat
 {
     public class KeyMapper : MonoBehaviour
     {
         private bool capturing = false;
-        public Text text;
+        public TextMeshProUGUI text;
         private MappedKeyCode code;
-        [HideInInspector]
-        public bool changed;
         private static readonly string c1 = ".";
         private static readonly string c2 = "..";
         private static readonly string c3 = "...";
         private int tick = 0;
         private float tickUpdate = 0.5f;
         private float tickTime = 0;
+
+        public Action OnUpdate;
+
+
 
 
         public void Toggle()
@@ -29,13 +33,27 @@ namespace Wombat
             tick++;
         }
 
-        private void SetKeyCode(MappedKeyCode code)
+        public void SetKeyCode(KeyCode code)
         {
-            if (this.code == null || !this.code.Equals(code))
-            {
-                changed = true;
-                this.text.text = code.label;
-            }
+            if (this.code == null) return;
+            capturing = false;
+            this.code.Update(code);
+            this.text.text = this.code.label;
+            OnUpdate?.Invoke();
+        }
+
+        public void SetKeyCode(KeyCode code, char c)
+        {
+            if (this.code == null) return;
+            capturing = false;
+            this.code.Update(code, c);
+            this.text.text = this.code.label;
+            OnUpdate?.Invoke();
+        }
+
+        public void InitializeKeyCode(MappedKeyCode code)
+        {
+            this.text.text = code.label;
             capturing = false;
             this.code = code;
         }
@@ -78,25 +96,25 @@ namespace Wombat
                 UpdatePointer();
                 if (Input.GetKey(KeyCode.LeftArrow))
                 {
-                    this.SetKeyCode(new MappedKeyCode(KeyCode.LeftArrow));
+                    this.SetKeyCode(KeyCode.LeftArrow);
                     return;
                 }
                 else
                 if (Input.GetKey(KeyCode.RightArrow))
                 {
-                    this.SetKeyCode(new MappedKeyCode(KeyCode.RightArrow));
+                    this.SetKeyCode(KeyCode.RightArrow);
                     return;
                 }
                 else
                 if (Input.GetKey(KeyCode.UpArrow))
                 {
-                    this.SetKeyCode(new MappedKeyCode(KeyCode.UpArrow));
+                    this.SetKeyCode(KeyCode.UpArrow);
                     return;
                 }
                 else
                 if (Input.GetKey(KeyCode.DownArrow))
                 {
-                    this.SetKeyCode(new MappedKeyCode(KeyCode.DownArrow));
+                    this.SetKeyCode(KeyCode.DownArrow);
                     return;
                 }
                 string s = Input.inputString;
@@ -110,12 +128,12 @@ namespace Wombat
                         }
                         if ((c == '\n') || (c == '\r'))
                         {
-                            this.SetKeyCode(new MappedKeyCode(KeyCode.Return));
+                            this.SetKeyCode(KeyCode.Return);
                             break;
                         }
                         KeyCode code = GetKeyCode(c);
                         // Debug.Log(char.ToUpper(c) + " " + code.ToString() + (int)code);
-                        SetKeyCode(new MappedKeyCode(code, c));
+                        SetKeyCode(code, c);
                         break;
 
                     }

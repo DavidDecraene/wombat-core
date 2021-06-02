@@ -6,23 +6,58 @@ namespace Wombat
     public class Clock
     {
         private bool clockRunning = false;
-        public int days;
-        public int hours;
-        public int minutes;
-        public int seconds;
+        public int hoursInDay = 24;
+        public int month;
+        public int year;
+        public int day;
+        public int hour;
+        public int minute;
+        public int second;
         private float timeRest;
         public float timeSpeed = 30; // 60.0f * 15; // 30; // 30 60.0f*15; 
 
         public string Render()
         {
-            string result = string.Format("D {0} H {1} M {2} ", days, hours, minutes);
-            return result;
+            System.Text.StringBuilder sb = new System.Text.StringBuilder( 50);
+            if (year > 0)
+            {
+                sb.Append(year).Append(year > 1 ? " years " : "year ");
+            }
+            if (month > 0)
+            {
+                sb.Append(month).Append(month > 1 ? " months " : "month ");
+            }
+            if (day > 0)
+            {
+                sb.Append(day).Append(day > 1 ? " days " : "day ");
+            }
+            if (hour > 0)
+            {
+                sb.Append(hour).Append(hour > 1 ? " hours " : "hour ");
+            }
+            if (minute > 0)
+            {
+                sb.Append(minute).Append(hour > 1 ? " minutes " : "minute ");
+            }
+            if (second > 0)
+            {
+                sb.Append(second).Append(second > 1 ? " seconds " : "second ");
+
+            }
+            return sb.ToString();
         }
 
         public float DayFraction()
         {
-            float f = seconds + (minutes * 60) + (hours * 3600);
-            return f / 86400f;
+            float ht = 60 * 60;
+            float dt = ht * hoursInDay;
+            float f = second + (minute * 60) + (hour * ht);
+            return f / dt;
+        }
+
+        public float Hours()
+        {
+            return hour + minute / 60f;
         }
 
         public void Pause()
@@ -42,41 +77,41 @@ namespace Wombat
 
         void UpdateMinutes(int add)
         {
-            minutes += add;
-            if (minutes > 59)
+            minute += add;
+            if (minute >= 60)
             {
-                int iRest = minutes % 60;
-                UpdateHours((minutes - iRest) / 60);
-                minutes = iRest;
+                int iRest = minute % 60;
+                UpdateHours((minute - iRest) / 60);
+                minute = iRest;
             }
         }
 
         void UpdateHours(int add)
         {
-            hours += add;
-            if (hours > 23)
+            hour += add;
+            if (hour >= hoursInDay)
             {
-                int iRest = hours % 24;
-                UpdateDays((hours - iRest) / 24);
-                hours = iRest;
+                int iRest = hour % hoursInDay;
+                UpdateDays((hour - iRest) / hoursInDay);
+                hour = iRest;
             }
         }
 
         void UpdateDays(int add)
         {
-            days += add;
+            day += add;
 
         }
 
         void UpdateSeconds(int add)
         {
-            seconds += add;
-            if (seconds > 59)
+            second += add;
+            if (second >= 60)
             {
 
-                int iRest = seconds % 60;
-                UpdateMinutes((seconds - iRest) / 60);
-                seconds = iRest;
+                int iRest = second % 60;
+                UpdateMinutes((second - iRest) / 60);
+                second = iRest;
             }
 
         }
@@ -85,20 +120,22 @@ namespace Wombat
         {
 
             if (!clockRunning) { return false; }
-            timeRest += Time.deltaTime * timeSpeed;
+            timeRest += deltaTime * timeSpeed;
             bool clockChanged = false;
-            if (timeRest > 60 * 60 * 24)
+            float hours = 60 * 60;
+            float days = hours * hoursInDay;
+            if (timeRest > days)
             {
                 clockChanged = true;
-                float rest = timeRest % (60 * 60 * 24);
-                days += Mathf.FloorToInt((timeRest - rest) / (60 * 60 * 24));
+                float rest = timeRest % (days);
+                day += Mathf.FloorToInt((timeRest - rest) / (days));
                 timeRest = rest;
             }
-            if (timeRest > 60 * 60)
+            if (timeRest > hours)
             {
                 clockChanged = true;
-                float rest = timeRest % (60 * 60);
-                UpdateHours(Mathf.FloorToInt((timeRest - rest) / (60 * 60)));
+                float rest = timeRest % (hours);
+                UpdateHours(Mathf.FloorToInt((timeRest - rest) / (hours)));
                 timeRest = rest;
             }
             if (timeRest > 60)

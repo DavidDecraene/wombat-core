@@ -1,19 +1,15 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
 namespace Wombat
 {
-    public interface ICancellableState
+    public class TimedFiniteState<Data> where Data : System.Enum
     {
-        bool CancelState();
-    }
 
-    public abstract class FiniteState<Data> where Data : System.Enum
-    {
+
         public readonly Data state;
 
-        public FiniteState(Data state)
+        public TimedFiniteState(Data state)
         {
             this.state = state;
         }
@@ -40,15 +36,9 @@ namespace Wombat
 
         }
 
-        public virtual Data Update()
+        public virtual Data Update(float delta)
         {
             return state;
-        }
-
-        public virtual Data FixedUpdate()
-        {
-            return state;
-
         }
     }
 }

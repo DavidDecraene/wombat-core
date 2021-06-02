@@ -12,19 +12,21 @@ namespace Wombat
         public Image image;
         private Sprite baseSprite;
         private RectTransform rectTransform;
+        private Camera mainCam;
 
         private void Awake()
         {
             this.gameObject.SetActive(false);
             baseSprite = image.sprite;
             rectTransform = GetComponent<RectTransform>();
+            mainCam = Camera.main;
         }
 
         public void Update()
         {
             if (dragging)
             {
-                transform.position = UIUtils.UIToMouseOverlay(this.rectTransform, Camera.main);
+                transform.position = UIUtils.UIToMouseOverlay(this.rectTransform, mainCam);
             }
         }
 

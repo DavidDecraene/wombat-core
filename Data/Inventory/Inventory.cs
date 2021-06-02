@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using UnityEngine;
 namespace Wombat
 {
+
+
     public class Inventory<Type>
     {
         private readonly List<InventorySlot<Type>> slots = new List<InventorySlot<Type>>();
@@ -11,11 +13,54 @@ namespace Wombat
         private readonly Func<Type, int> stackSize;
         public int SlotCount { get => slots.Count; }
 
-        public Inventory(int size, Func<Type, string> keyGen, Func<Type, int> stackSize)
+        public Inventory(int size, Func<Type, int> stackSize)
         {
             this.stackSize = stackSize;
-            Contents = new InventoryMap<Type>(keyGen);
+            Contents = new InventoryMap<Type>();
             for (int i = 0; i < size; i++) slots.Add(new InventorySlot<Type>(this));
+
+        }
+
+        public Inventory(int size, Func<Type, int> stackSize, Predicate<Type> filter)
+        {
+            this.stackSize = stackSize;
+            Contents = new InventoryMap<Type>();
+            for (int i = 0; i < size; i++)
+            {
+                InventorySlot<Type> slot = new InventorySlot<Type>(this);
+                slot.filter = filter;
+                slots.Add(slot);
+            }
+
+        }
+
+        public void Sort()
+        {
+            InventoryMap<Type> copyMap = new InventoryMap<Type>();
+            //Inventory<Type> sortInv = new Inventory<Type>(slots.Count, stackSize);
+            foreach(InventorySlot<Type> slot in slots)
+            {
+                if (slot == null) continue;
+                if (slot.Count <= 0) continue;
+                copyMap.AddResource(slot.Resource, slot.Count, int.MaxValue);
+                //sortInv.AddResource(slot.Resource, slot.Count);
+            }
+            Clear();
+            SortedSet<Type> sortedSet = new SortedSet<Type>(copyMap.Keys());
+            // Could just use a map as well.
+            // Could sort alphabetically. Consider.
+            foreach(Type t in sortedSet)
+            {
+                int ct = copyMap.GetCount(t);
+                AddResource(t, ct);
+            }
+            /**
+            foreach (InventorySlot<Type> slot in sortInv.slots)
+            {
+                if (slot == null) continue;
+                if (slot.Count <= 0) continue;
+                AddResource(slot.Resource, slot.Count);
+            } */
 
         }
 
@@ -25,24 +70,20 @@ namespace Wombat
             return stackSize(definition);
         }
 
-        /**
-        public void Restore(InventorySaveData data)
+        public int GetCount(Type resource)
         {
-            if (data == null || data.slots == null)
-            {
-                return;
-            }
-            contents.Clear();
-            for (int i = 0; i < slots.Count && i < data.slots.Length; i++)
-            {
-                InventorySlotSaveData slotSave = data.slots[i];
-                InventorySlot slot = slots[i];
-                slot.Restore(slotSave);
-                contents.BalanceCount(slot.GetResource(), slot.GetResourceCount());
-            }
+            return Contents.GetCount(resource);
+        }
 
+        public void Clear()
+        {
 
-        }*/
+            foreach (InventorySlot<Type> s in slots)
+            {
+                s.Clear();
+            }
+            Contents.Clear();
+        }
 
         public IEnumerable<InventorySlot<Type>> GetSlots()
         {
@@ -55,13 +96,31 @@ namespace Wombat
             return this.slots[index];
         }
 
+        public int RestoreResource(int slotIndex, Type resource, int amount)
+        {
+            InventorySlot<Type> slot = GetSlot(slotIndex);
+            if (slot == null) return 0;
+            return slot.RestoreResource(resource, amount);
+        }
+
+        public int AddResource(TypeQuantity<Type> resource)
+        {
+            return AddResource(resource.value, resource.count);
+        }
+
         public bool AddResource(Type resource)
         {
             return AddResource(resource, 1) == 1;
         }
 
+        public int AcceptResource(TypeQuantity<Type> resource)
+        {
+            return AcceptResource(resource.value, resource.count);
+        }
+
         public int AcceptResource(Type resource, int amount)
         {
+            if (resource == null) return 0;
             int asked = amount;
             int total = 0;
             foreach (InventorySlot< Type> s in slots)
@@ -80,16 +139,38 @@ namespace Wombat
 
         public int AddResource(Type resource, int amount)
         {
+            if (resource == null) return 0;
             int total = 0;
+            // First add to existing slots...
+            foreach (InventorySlot<Type> s in slots)
+            {
+                if (s.Resource != null)
+                {
+                    int added = s.AddResource(resource, amount);
+                    if (added > 0)
+                    {
+                        amount -= added;
+                        total += added;
+                    }
+                    if (amount <= 0) return total;
+                    continue;
+                }
+            }
+            // Then fill empty slots..
+            if (amount <= 0) return total;
             foreach (InventorySlot< Type> s in slots)
             {
-                int added = s.AddResource(resource, amount);
-                if (added > 0)
+                if (s.Resource == null)
                 {
-                    amount -= added;
-                    total += added;
+                    int added = s.AddResource(resource, amount);
+                    if (added > 0)
+                    {
+                        amount -= added;
+                        total += added;
+                    }
+                    if (amount <= 0) return total;
+
                 }
-                if (amount <= 0) break;
             }
             return total;
         }
@@ -97,6 +178,13 @@ namespace Wombat
         public bool RemoveResource(Type resource)
         {
             return RemoveResource(resource, 1) == 1;
+        }
+
+
+
+        public int RemoveResource(TypeQuantity<Type> resource)
+        {
+            return RemoveResource(resource.value, resource.count);
         }
 
         public int RemoveResource(Type resource, int amount)

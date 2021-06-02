@@ -10,12 +10,13 @@ namespace Wombat
         public MappedKeyCode altCode;
         public readonly T type;
         private bool consumed = false;
+        private bool paused = false;
         private readonly IKeyBindings parent;
         public string description;
         public string label;
         public bool locked = false;
 
-        public string Label { get => code.ToString(); }
+        public string Label { get => code.label; }
 
         public event System.Action OnCodeChange;
 
@@ -33,6 +34,16 @@ namespace Wombat
             this.type = type;
             this.code = new MappedKeyCode(code);
             this.altCode = new MappedKeyCode(altCode);
+        }
+
+        public void Pause(bool state)
+        {
+            paused = state;
+        }
+
+        public bool HasAltCode()
+        {
+            return this.altCode.code != KeyCode.None;
         }
 
         public KeyConfig<T> Lock()
@@ -53,7 +64,7 @@ namespace Wombat
             if (data == null) return;
             if (data.code != KeyCode.None)
             {
-                code = new MappedKeyCode(data.code);
+                code.Update(data.code);
                 if (data.codeLabel != null)
                 {
                     code.label = data.codeLabel;
@@ -61,7 +72,7 @@ namespace Wombat
             }
             if (data.altCode != KeyCode.None)
             {
-                altCode = new MappedKeyCode(data.altCode);
+                altCode.Update(data.altCode);
                 if (data.altCodeLabel != null)
                 {
                     altCode.label = data.altCodeLabel;
@@ -119,6 +130,11 @@ namespace Wombat
             return consumed;
         }
 
+        public bool Paused()
+        {
+            return paused || parent.Paused();
+        }
+
 
         public bool IsPressed()
         {
@@ -127,7 +143,7 @@ namespace Wombat
 
         public bool IsHeldDown()
         {
-            if (parent.Paused()) return false;
+            if (Paused()) return false;
             if (consumed)
             {
                 return false;
@@ -145,7 +161,7 @@ namespace Wombat
 
         public bool IsPressed(bool consume)
         {
-            if (parent.Paused()) return false;
+            if (Paused()) return false;
             if (consumed)
             {
                 return false;

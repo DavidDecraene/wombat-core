@@ -1,7 +1,9 @@
-﻿using System;
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
 namespace Wombat
 {
-    public class ObservableValue<Data>
+    public class ValueTracker<Data>
     {
         private Data value = default;
         public bool IsSet { get; private set; } = false;
@@ -15,14 +17,14 @@ namespace Wombat
                 SetValue(value);
             }
         }
-        public event Action<Data> ValueChange;
+        private System.Action<Data> ValueChange;
 
-        public ObservableValue()
+        public ValueTracker()
         {
 
         }
 
-        public ObservableValue(Data initialData)
+        public ValueTracker(Data initialData)
         {
             this.IsSet = true;
             this.value = initialData;
@@ -39,15 +41,16 @@ namespace Wombat
             TriggerChange();
         }
 
-        public ObservableValue<Data> UseReplay()
+        public ValueTracker<Data> UseReplay()
         {
             this.replay = true;
             return this;
         }
 
-        public void Subscribe(Action<Data> ValueChange)
+        public void ConfigureAction(System.Action<Data> ValueChange)
         {
-            this.ValueChange += ValueChange;
+            this.ValueChange = ValueChange;
+            if (ValueChange == null) return;
 
             if (replay && IsSet)
             {
@@ -55,17 +58,10 @@ namespace Wombat
             }
         }
 
-
-        public void UnSubscribe(Action<Data> ValueChange)
-        {
-            if (this.ValueChange != null)
-                this.ValueChange -= ValueChange;
-        }
-
         public void TriggerChange()
         {
             ValueChange?.Invoke(value);
         }
-    }
 
+    }
 }

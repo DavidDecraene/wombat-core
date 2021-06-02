@@ -12,6 +12,7 @@ namespace Wombat
         public GameObject dragTarget;
         private RectTransform rectTransform;
         private Vector3 offset;
+        private Camera mainCam;
 
 
         void Start()
@@ -24,6 +25,7 @@ namespace Wombat
 
             rectTransform = dragTarget != null ? dragTarget.GetComponent<RectTransform>() : GetComponent<RectTransform>();
             offset = dragTarget != null ? dragTarget.transform.position - this.transform.position : Vector3.zero;
+            mainCam = Camera.main;
         }
 
         public void Update()
@@ -48,14 +50,14 @@ namespace Wombat
                 if (dragTarget != null)
                 {
                     // dragTarget.transform.position = new Vector3(Input.mousePosition.x, Input.mousePosition.y) + offset;
-                    dragTarget.transform.position = UIUtils.UIToMouseOverlay(this.rectTransform, Camera.main) + offset;
+                    dragTarget.transform.position = UIUtils.UIToMouseOverlay(this.rectTransform, mainCam) + offset;
                     //  VertiFact.UIUtils.UIToMouse(this.rectTransform);
                     // new Vector2(Input.mousePosition.x, Input.mousePosition.y);
                 }
                 else
                 {
                     //transform.position  = new Vector3(Input.mousePosition.x, Input.mousePosition.y) + offset;
-                    transform.position = UIUtils.UIToMouseOverlay(this.rectTransform, Camera.main) + offset;
+                    transform.position = UIUtils.UIToMouseOverlay(this.rectTransform, mainCam) + offset;
                 }
             }
         }

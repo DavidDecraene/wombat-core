@@ -27,6 +27,11 @@ namespace Wombat
 
         public MonoBehavioursGuard<T> OnLoad(System.Action<T[]> onLoad)
         {
+            if (value != null)
+            {
+                onLoad.Invoke(value);
+                return this;
+            }
             this.onLoad = onLoad;
             return this;
         }
@@ -99,6 +104,11 @@ namespace Wombat
 
         public MonoBehaviourGuard<T> OnLoad(System.Action<T> onLoad)
         {
+            if (value != null)
+            {
+                onLoad.Invoke(value);
+                return this;
+            }
             this.onLoad = onLoad;
             return this;
         }

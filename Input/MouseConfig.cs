@@ -35,6 +35,15 @@ namespace Wombat
             return IsPressed(false);
         }
 
+        public bool IsHeldDown()
+        {
+            if (Input.GetMouseButton(button))
+            {
+                return true;
+            }
+            return false;
+        }
+
         public bool IsPressed(bool consume)
         {
             if (consumed)

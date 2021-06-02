@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace Wombat
@@ -10,12 +11,12 @@ namespace Wombat
         string GetName();
     }
 
-    public struct InventoryMapData<Type>
+    public struct TypeQuantity<Type>
     {
         public int count;
         public readonly Type value;
 
-        public InventoryMapData(Type value, int count)
+        public TypeQuantity(Type value, int count)
         {
             this.count = count;
             this.value = value;
@@ -24,47 +25,59 @@ namespace Wombat
 
     public class InventoryMap<Type>
     {
-        private Dictionary<string, InventoryMapData<Type>> values = new Dictionary<string, InventoryMapData<Type>>();
-        private readonly Func<Type, string> keyGen;
+        private Dictionary<Type, TypeQuantity<Type>> values = new Dictionary<Type, TypeQuantity<Type>>();
+        public int Count { get => values.Count;  }
 
-        public event Action<InventoryMapData<Type>> OnInventoryChange;
+        public event Action<TypeQuantity<Type>> OnInventoryChange;
 
-        public InventoryMap(Func<Type, string> keyGen)
+        public InventoryMap()
         {
-            this.keyGen = keyGen;
-        }
-
-        public string GenerateKey(Type resource)
-        {
-            if (resource == null) return null;
-            return keyGen(resource);
-        }
-
-        public int GetCount(Type resource)
-        {
-            if (resource == null) return 0;
-            if (values.TryGetValue(keyGen(resource), out InventoryMapData<Type> currentValue))
-            {
-                return currentValue.count;
-            }
-            return 0;
-        }
-
-        public Type[] Keys()
-        {
-            Type[] result = new Type[values.Count];
-            int i = 0;
-            foreach (InventoryMapData<Type> k in values.Values)
-            {
-                result[i++] = k.value;
-            }
-            return result;
         }
 
         public void Clear()
         {
             values.Clear();
         }
+
+        public void AddTo(InventoryMap<Type> other)
+        {
+            foreach(var entry in values)
+            {
+                other.BalanceCount(entry.Key, entry.Value.count);
+            }
+        }
+
+        public int GetCount(Type resource)
+        {
+            if (resource == null) return 0;
+            if (values.TryGetValue(resource, out TypeQuantity<Type> currentValue))
+            {
+                return currentValue.count;
+            }
+            return 0;
+        }
+
+        public IEnumerable<Type> GetKeys()
+        {
+            return values.Keys;
+        }
+
+        public IEnumerable<TypeQuantity<Type>> GetContents()
+        {
+            return values.Values.ToList();
+        }
+
+        public Type[] Keys()
+        {
+            Type[] result = new Type[values.Count];
+            int i = 0;
+            foreach (TypeQuantity<Type> k in values.Values)
+            {
+                result[i++] = k.value;
+            }
+            return result;
+        }
+
 
         public int AddResource(Type resource, int amount, int max)
         {
@@ -104,25 +117,24 @@ namespace Wombat
         {
             if (amount == 0) return;
             if (resource == null) return;
-            string key = keyGen(resource);
-            if (values.TryGetValue(key, out InventoryMapData<Type> currentValue))
+            if (values.TryGetValue(resource, out TypeQuantity<Type> currentValue))
             {
                 currentValue.count += amount;
                 if (currentValue.count <= 0)
                 {
                     // remove it
-                    values.Remove(key);
+                    values.Remove(resource);
                     this.OnInventoryChange?.Invoke(currentValue);
                     return;
                 }
-                values[key] = currentValue;
+                values[resource] = currentValue;
                 this.OnInventoryChange?.Invoke(currentValue);
             }
             else
             {
                 if (amount < 0) return;
-                InventoryMapData<Type> mapData = new InventoryMapData<Type>(resource, amount);
-                values.Add(key, mapData);
+                TypeQuantity<Type> mapData = new TypeQuantity<Type>(resource, amount);
+                values.Add(resource, mapData);
                 this.OnInventoryChange?.Invoke(mapData);
                 return;
             }
