@@ -28,6 +28,11 @@ namespace Wombat
             this.value = initialData;
         }
 
+        public void SetSilent(Data value)
+        {
+            this.value = value;
+        }
+
         public void SetValue(Data value, bool checkChange = true)
         {
             if (checkChange && Equals(value, this.value))

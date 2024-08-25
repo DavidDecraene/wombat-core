@@ -13,6 +13,7 @@ namespace Wombat
         private Sprite baseSprite;
         private RectTransform rectTransform;
         private Camera mainCam;
+        private InventorySlot<ResourceCard> slot;
 
         private void Awake()
         {
@@ -30,10 +31,23 @@ namespace Wombat
             }
         }
 
-        public void StartDrag(Sprite icon)
+        public void StartDrag(InventorySlot<ResourceCard> slot)
         {
-            this.image.sprite = icon ?? baseSprite;
+            this.slot = slot;
+            this.image.sprite = slot?.Resource?.icon ?? baseSprite;
             this.Toggle(true);
+        }
+
+        public void ClearInventoryView(Inventory<ResourceCard> inventory)
+        {
+            if (slot == null) return;
+            if (slot.Parent != inventory)
+            {
+                return;
+            }
+            slot = null;
+            Toggle(false);
+
         }
 
         public void Toggle(bool state)

@@ -81,6 +81,19 @@ namespace Wombat
             return new Vector3(boundedPosition.x, boundedPosition.y);
         }
 
+        public static void RenderIfNotNull(string s, TextMeshProUGUI target, bool disable = true)
+        {
+            if (target == null) return;
+            if (s == null || s.Length == 0)
+            {
+                if (disable) target.gameObject.SetActive(false);
+                target.text = null;
+                return;
+            }
+            target.text = s;
+            target.gameObject.SetActive(true);
+        }
+
         public static string RenderNumber(int amount, TextMeshProUGUI count, bool showZero)
         {
             string result = null;
